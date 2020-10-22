@@ -12,6 +12,7 @@ django-environ = "*"
 fcm-django = "*"
 django-phonenumber-field = "*"
 phonenumbers = "*"
+cryptography = "*"
 
 [requires]
 python_version = "3.8"

@@ -13,6 +13,9 @@ class Service(models.Model):
     )
     state = models.PositiveIntegerField(default=0)
 
+    def __str__(self):
+        return self.service
+
 class Event(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE,default=None)
     reference_id = models.PositiveIntegerField()
@@ -23,3 +26,17 @@ class Event(models.Model):
     is_broadcast = models.BooleanField(default=False)
     offset = models.PositiveIntegerField(null=True,blank=True)
     limit = models.PositiveIntegerField(null=True,blank=True)
+    created = models.DateTimeField(
+        verbose_name="Created",
+        auto_now_add=True,
+    )
+    updated = models.DateTimeField(
+        verbose_name="Updated",
+        auto_now=True,
+    )
+
+    class Meta:
+        ordering = ('created',)
+
+    def __str__(self):
+        return str(self.service)
