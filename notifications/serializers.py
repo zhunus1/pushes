@@ -15,21 +15,22 @@ class DeviceSerializer(serializers.ModelSerializer):
         return FCMDevice.objects.create(**validated_data)
 
 
-class ServiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Service
-        fields = '__all__'
+# class ServiceSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Service
+#         fields = '__all__'
 
 
 class EventSerializer(serializers.ModelSerializer):
-    service = ServiceSerializer()
+    state = serializers.IntegerField()
     class Meta:
         model = Event
-        fields = ['service', 'reference_id', 'is_notification', 'data', 'is_broadcast']
+        fields = ['send_at','reference_id', 'is_notification', 'data', 'is_broadcast']
 
 
-class MessageSerializer(serializers.Serializer):
-    user_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        )
-    message = serializers.JSONField()
+
+# class NotificationSerializer(serializers.Serializer):
+#     user_ids = serializers.ListField(
+#         child=serializers.IntegerField(),
+#         )
+#     event = EventSerializer()
