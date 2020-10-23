@@ -49,6 +49,7 @@ class SendMessageViewSet(APIView):
     def post(self,request,format=None):
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
+            #STATE NUMBER NEEDED
             user_caps_ids = serializer.validated_data['user_ids']
             users = DuplicateUser.objects.filter(caps_id__in=user_caps_ids)
             devices = FCMDevice.objects.filter(user__in=users)
