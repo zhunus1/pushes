@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'users',
-    'notifications',
+    'notifications.apps.NotificationsConfig',
     'fcm_django',
 ]
 
