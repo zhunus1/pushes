@@ -12,7 +12,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
 )
 
-from .models import Event
+from .models import Event,Service
 from users.models import DuplicateUser
 from fcm_django.models import FCMDevice
 from .serializers import EventSerializer,DeviceSerializer

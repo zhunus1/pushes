@@ -47,7 +47,24 @@ INSTALLED_APPS = [
     'users',
     'notifications.apps.NotificationsConfig',
     'fcm_django',
+    'django_q',
 ]
+
+Q_CLUSTER = {
+    'name': 'notifications',
+    'workers': 8,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'cpu_affinity': 1,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'label': 'Django Q',
+    'redis': {
+        'host': '127.0.0.1',
+        'port': 6379,
+        'db': 0, }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -78,7 +95,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pushes.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
