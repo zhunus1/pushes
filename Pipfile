@@ -13,6 +13,11 @@ fcm-django = "*"
 django-phonenumber-field = "*"
 phonenumbers = "*"
 cryptography = "*"
+django-q = {editable = true, git = "https://github.com/Koed00/django-q", ref = "master"}
+redis = "*"
+arrow = "*"
+blessed = "*"
+django-picklefield = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.7.4"

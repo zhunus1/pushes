@@ -24,7 +24,6 @@ class Event(models.Model):
         #Filter by NUll and Date by asc dates[] which I accept from Service
     reference_id = models.PositiveIntegerField()
     #FCM has 2 types of messages: 1)Notification message 2)Data message
-    is_notification = models.BooleanField(default=True)
     data = models.JSONField()
     #Broadcast means deliver message to all users
     is_broadcast = models.BooleanField(default=False)
