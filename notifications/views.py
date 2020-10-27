@@ -5,7 +5,7 @@ from users.authentication import FastAuthentication
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from urllib import request
+import requests
 
 from rest_framework.permissions import (
     AllowAny,

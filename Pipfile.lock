@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3482d3a49e44d5e85f03938b267d893a25af7e25cae8dc875b11339f619ce95e"
+            "sha256": "0fa0c17d5dfcc6662a163b194fc7b6117444f576350292c4996fed817069785a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -163,15 +163,6 @@
             "index": "pypi",
             "version": "==3.0.1"
         },
-        "django-q": {
-          "editable": true,
-           "git": "https://github.com/Koed00/django-q",
-           "hashes": [
-               "sha256:de4433b10d96ef921f8f4e813053fc8d881a50c0657d0fada11d7538213b2a04",
-               "sha256:de7077660ede36bfdd89ab9405d6393b598bb3e0bfed61f59a0a9074cc4942bb"
-           ],
-           "ref": "d2e4101c91892428d766b77b8d6ecf771334561b"
-        },
         "djangorestframework": {
             "hashes": [
                 "sha256:5c5071fcbad6dce16f566d492015c829ddb0df42965d488b878594aabc3aed21",
@@ -203,6 +194,10 @@
             ],
             "markers": "platform_system == 'Windows'",
             "version": "==1.0.1"
+        },
+        "myproject": {
+            "git": "https://github.com/Koed00/django-q.git",
+            "ref": "d2e4101c91892428d766b77b8d6ecf771334561b"
         },
         "phonenumbers": {
             "hashes": [

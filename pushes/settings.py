@@ -51,14 +51,15 @@ INSTALLED_APPS = [
 ]
 
 Q_CLUSTER = {
-    'name': 'notifications',
+    'name': 'myproject',
     'workers': 8,
     'recycle': 500,
     'timeout': 60,
     'compress': True,
-    'cpu_affinity': 1,
+    'retry': 3,
     'save_limit': 250,
     'queue_limit': 500,
+    'cpu_affinity': 1,
     'label': 'Django Q',
     'redis': {
         'host': '127.0.0.1',
@@ -146,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Almaty'
 
 USE_I18N = True
 

@@ -27,6 +27,11 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = ['send_at','reference_id', 'is_notification', 'data', 'is_broadcast']
 
+class RetrievedEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['send_at','reference_id', 'is_notification', 'data', 'is_broadcast']
+
 
 
 # class NotificationSerializer(serializers.Serializer):
