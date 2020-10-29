@@ -2,38 +2,61 @@ from django.db.models.signals import post_save,post_delete
 from notifications.models import Event,Service
 from users.models import DuplicateUser
 from fcm_django.models import FCMDevice
+from django_q.models import Schedule
 
+from rest_framework import status
 from django.dispatch import receiver
 from django_q.tasks import schedule
-from urllib import request
-
+import requests
+from .serializers import EventDetailSerializer
+from urllib.parse import urljoin
+from django.forms.models import model_to_dict
 # @receiver(post_save,sender=Event)
 # def save_event(sender,instance:Event,**kwargs):
 #     service = Service.objects.filter(service=instance.service).first()
 #     service.state+=1
 #     service.save()
 
-def task(service,sender):
-    response = requests.get(service.url,params={'pk':sender.pk},timeout=60)
-    event_data = response.json()
-    listeners = event_data['listeners']
+def broadcast(data):
+    devices = FCMDevice.objects.all()
+    devices.send_message(title=data['title'], body=data['body'])
+
+def multicast(listeners,data):
     users = DuplicateUser.objects.filter(caps_id__in=listeners)
     devices = FCMDevice.objects.filter(user__in=users)
-    devices.send_message(title=event_data.title, body=event_data.body)
-
-#Need to check state. See user manual
+    devices.send_message(title=data['title'], body=data['title'])
 
 @receiver(post_save,sender=Event)
 def start_tasks(sender,instance:Event,**kwargs):
-    service = Service.objects.filter(service=instance.service)
-    service.state+=1
-    service.save()
-    schedule('task',
-             service, sender,
-             hook=None,
-             schedule_type=Schedule.DAILY)
+    service = instance.service
+    url = urljoin(service.url,(str(instance.reference_id)+'/'))
+    response = requests.get(url,timeout=5,headers={'X-API-KEY':'85cb29a1-c630-496b-949d-8f9a1b8b7306'})
+    if status.is_success(response.status_code):
+        event_data = response.json()
+        serializer = EventDetailSerializer(data=event_data)
+        serializer.is_valid(raise_exception=True)
 
-@receiver(post_delete,sender=Service)
-def delete_tasks(sender,instance:Event,**kwargs):
-    
-    return None
+        is_broadcast = serializer.validated_data['is_broadcast']
+
+        if is_broadcast:
+            schedule('notifications.signals.broadcast',
+                     serializer.validated_data['data'],
+                     schedule_type=Schedule.ONCE,
+                     repeats = 1,
+                     next_run=serializer.validated_data['send_at'])
+        else:
+            schedule('notifications.signals.multicast',
+                    serializer.validated_data['listeners'],serializer.validated_data['data'],
+                    schedule_type=Schedule.ONCE,
+                    repeats = 1,
+                    next_run=serializer.validated_data['send_at'])
+
+#Need to check state. See user manual
+
+@receiver(post_save,sender=Service)
+def start_check(sender,instance:Service,created,**kwargs):
+    if created:
+        schedule('pushes.tasks.check_state',
+                 instance.service,
+                 schedule_type=Schedule.MINUTES,
+                 repeats=-1)

@@ -2,14 +2,14 @@ from django.db import models
 from datetime import datetime
 
 class ServiceChoices(models.TextChoices):
-    CARFAX = 'CFX','Carfax'
-    ADVERTS = 'ADV','Adverts'
-    APARKING = 'PRK','Aparking'
-    GARAGE = 'GGG','Garage'
+    CARFAX = 'carfax','Carfax'
+    ADVERTS = 'adverts','Adverts'
+    APARKING = 'aparking','Aparking'
+    GARAGE = 'garage','Garage'
 
 class Service(models.Model):
     service = models.CharField(
-        max_length=3,
+        max_length=15,
         choices=ServiceChoices.choices,
     )
     state = models.PositiveIntegerField(default=0)
@@ -19,14 +19,15 @@ class Service(models.Model):
         return self.service
 
 class Event(models.Model):
+    service = models.ForeignKey(Service,on_delete=models.CASCADE,related_name="events")
     send_at = models.DateTimeField(blank=True,null=True)#if Null then send Immeaditely
         #If data is passed then send Immeaditely
         #Filter by NUll and Date by asc dates[] which I accept from Service
-    reference_id = models.PositiveIntegerField()
+    reference_id = models.PositiveIntegerField(unique=True)
     #FCM has 2 types of messages: 1)Notification message 2)Data message
     data = models.JSONField()
     #Broadcast means deliver message to all users
-    is_broadcast = models.BooleanField(default=False)
+    is_broadcast = models.BooleanField()
     created = models.DateTimeField(
         verbose_name="Created",
         auto_now_add=True,

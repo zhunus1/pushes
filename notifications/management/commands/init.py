@@ -8,11 +8,4 @@ from django_q.tasks import schedule
 import math
 class Command(BaseCommand):
        def handle(self, *args, **options):
-           # Schedule.objects.create(func='check_state',
-           #                         args='Carfax',
-           #                         schedule_type=Schedule.MINUTES,
-           #                         minutes=1
-           #                         )
-           schedule('pushes.tasks.check_state',
-                     'CFX',
-                     schedule_type=Schedule.MINUTES)
+           pass

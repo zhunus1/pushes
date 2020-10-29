@@ -25,12 +25,22 @@ class EventSerializer(serializers.ModelSerializer):
     state = serializers.IntegerField()
     class Meta:
         model = Event
-        fields = ['send_at','reference_id', 'is_notification', 'data', 'is_broadcast']
+        fields = ['send_at','reference_id', 'data', 'is_broadcast']
 
 class RetrievedEventSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
     class Meta:
         model = Event
-        fields = ['send_at','reference_id', 'is_notification', 'data', 'is_broadcast']
+        fields = ['send_at','pk', 'data', 'is_broadcast']
+
+class EventDetailSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
+    listeners = serializers.ListField(
+         child=serializers.IntegerField()
+    )
+    class Meta:
+        model = Event
+        fields = ['send_at','pk', 'data', 'is_broadcast','listeners']
 
 
 
