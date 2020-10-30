@@ -18,6 +18,8 @@ arrow = "*"
 blessed = "*"
 django-picklefield = "*"
 myproject = {git = "https://github.com/Koed00/django-q.git"}
+psycopg2 = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"

@@ -1,0 +1,81 @@
+version: '3'
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app
+      - nomad_notifications_media_data:/media
+      - nomad_notifications_static_data:/static
+    environment:
+      - ENV_FILE=.env
+      - TZ=Asia/Almaty
+    command: /start
+    networks:
+      - main
+
+  gunicorn:
+    <<: *django
+    command: gunicorn --bind 0.0.0.0:8000 pushes.wsgi -w 2
+    depends_on:
+      - django
+
+  qcluster:
+    <<: *django
+    command: python manage.py qcluster
+    depends_on:
+      - django
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=nomad
+      - POSTGRES_PASSWORD=nomad
+      - POSTGRES_DB=nomad
+      - TZ=Asia/Almaty
+    volumes:
+      - nomad_notifications_postgres_data:/var/lib/postgresql/data
+    networks:
+      - main
+
+  redis:
+    image: redis:latest
+    command: redis-server --appendonly yes
+    environment:
+      - TZ=Asia/Almaty
+    volumes:
+      - nomad_notifications_redis_data:/data
+    networks:
+      - main
+
+  nginx:
+    image: nginx:latest
+    environment:
+      - TZ=Asia/Almaty
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nomad_notifications_media_data:/media
+      - nomad_notifications_static_data:/static
+    depends_on:
+      - gunicorn
+    ports:
+      - "8003:80"
+    networks:
+      - main
+
+volumes:
+  nomad_notifications_media_data: {}
+  nomad_notifications_static_data: {}
+  nomad_notifications_postgres_data: {}
+  nomad_notifications_redis_data: {}
+
+
+networks:
+  main: {}

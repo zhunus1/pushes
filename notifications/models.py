@@ -6,6 +6,7 @@ class ServiceChoices(models.TextChoices):
     ADVERTS = 'adverts','Adverts'
     APARKING = 'aparking','Aparking'
     GARAGE = 'garage','Garage'
+    REQUESTS = 'request','Requests'
 
 class Service(models.Model):
     service = models.CharField(
@@ -23,7 +24,7 @@ class Event(models.Model):
     send_at = models.DateTimeField(blank=True,null=True)#if Null then send Immeaditely
         #If data is passed then send Immeaditely
         #Filter by NUll and Date by asc dates[] which I accept from Service
-    reference_id = models.PositiveIntegerField(unique=True)
+    reference_id = models.PositiveIntegerField()
     #FCM has 2 types of messages: 1)Notification message 2)Data message
     data = models.JSONField()
     #Broadcast means deliver message to all users
@@ -39,6 +40,7 @@ class Event(models.Model):
 
     class Meta:
         ordering = ('created',)
+        unique_together = ('service','reference_id')
 
     def __str__(self):
         return str(self.reference_id)

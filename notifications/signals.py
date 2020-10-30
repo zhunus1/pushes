@@ -11,6 +11,9 @@ import requests
 from .serializers import EventDetailSerializer
 from urllib.parse import urljoin
 from django.forms.models import model_to_dict
+from django.utils import timezone
+
+from django_q.tasks import async_task
 # @receiver(post_save,sender=Event)
 # def save_event(sender,instance:Event,**kwargs):
 #     service = Service.objects.filter(service=instance.service).first()
@@ -24,7 +27,7 @@ def broadcast(data):
 def multicast(listeners,data):
     users = DuplicateUser.objects.filter(caps_id__in=listeners)
     devices = FCMDevice.objects.filter(user__in=users)
-    devices.send_message(title=data['title'], body=data['title'])
+    devices.send_message(title=data['title'], body=data['body'])
 
 @receiver(post_save,sender=Event)
 def start_tasks(sender,instance:Event,**kwargs):
@@ -37,19 +40,25 @@ def start_tasks(sender,instance:Event,**kwargs):
         serializer.is_valid(raise_exception=True)
 
         is_broadcast = serializer.validated_data['is_broadcast']
-
-        if is_broadcast:
-            schedule('notifications.signals.broadcast',
-                     serializer.validated_data['data'],
-                     schedule_type=Schedule.ONCE,
-                     repeats = 1,
-                     next_run=serializer.validated_data['send_at'])
+        if serializer.validated_data['send_at'] > timezone.now():
+            if is_broadcast:
+                schedule('notifications.signals.broadcast',
+                         serializer.validated_data['data'],
+                         schedule_type=Schedule.ONCE,
+                         repeats = 1,
+                         next_run=serializer.validated_data['send_at'])
+            else:
+                schedule('notifications.signals.multicast',
+                        serializer.validated_data['listeners'],serializer.validated_data['data'],
+                        schedule_type=Schedule.ONCE,
+                        repeats = 1,
+                        next_run=serializer.validated_data['send_at'])
         else:
-            schedule('notifications.signals.multicast',
-                    serializer.validated_data['listeners'],serializer.validated_data['data'],
-                    schedule_type=Schedule.ONCE,
-                    repeats = 1,
-                    next_run=serializer.validated_data['send_at'])
+            if is_broadcast:
+                async_task('notifications.signals.broadcast',serializer.validated_data['data'])
+            else:
+                async_task('notifications.signals.multicast',serializer.validated_data['listeners'],serializer.validated_data['data'])
+
 
 #Need to check state. See user manual
 

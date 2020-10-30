@@ -62,7 +62,7 @@ Q_CLUSTER = {
     'cpu_affinity': 1,
     'label': 'Django Q',
     'redis': {
-        'host': '127.0.0.1',
+        'host': 'redis',
         'port': 6379,
         'db': 0, }
 }
@@ -102,15 +102,19 @@ WSGI_APPLICATION = 'pushes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env.str('DB_NAME'),
+        'USER' : env.str('DB_USER'),
+        'HOST' : env.str('DB_HOST'),
+        'PASSWORD' : env.str('DB_PASSWORD'),
+        'PORT' : env.str('DB_PORT'),
     }
 }
 
 FCM_DJANGO_SETTINGS = {
-        'APP_VERBOSE_NAME': 'FCM Django',
+        'APP_VERBOSE_NAME': env.str('APP_VERBOSE_NAME'),
          # default: _('FCM Django')
-        'FCM_SERVER_KEY': 'AAAAUXjPimw:APA91bEyIy7T13W9safbau6InKFqLy0y3tL3flK87rW2mQU5OGjsKOd6MDU1oCI30A0VLnUFNRVLAHBcdGV_gLD_H130pB3GKUJH-CVL5xrnSzxAZyqegtGdSinURYJ-SSZ1ZDnw-KS3',
+         'FCM_SERVER_KEY': env.str('FCM_SERVER_KEY'),
          # true if you want to have only one active device per registered user at a time
          # default: False
         'ONE_DEVICE_PER_USER': False,
@@ -170,6 +174,11 @@ LOCALE_PATHS = (
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = env.str('STATIC_PATH', default=os.path.join(BASE_DIR, 'static/'))
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = env.str('MEDIA_PATH', default=os.path.join(BASE_DIR, 'media/'))
 
 # CAPS URL
 CAPS_URL = env.str('CAPS_URL')

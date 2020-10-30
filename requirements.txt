@@ -5,17 +5,19 @@ blessed==1.17.11
 certifi==2020.6.20
 cffi==1.14.3
 chardet==3.0.4
-cryptography==3.2
+cryptography==3.2.1
 Django==3.1.2
 django-environ==0.4.5
 django-phonenumber-field==5.0.0
 django-picklefield==3.0.1
-django-q @ git+https://github.com/Koed00/django-q.git@d2e4101c91892428d766b77b8d6ecf771334561b
+django-q
 djangorestframework==3.12.1
 fcm-django==0.3.4
+gunicorn==20.0.4
 idna==2.10
 jinxed==1.0.1
 phonenumbers==8.12.11
+psycopg2==2.8.6
 pycparser==2.20
 pyfcm==1.4.7
 python-dateutil==2.8.1
