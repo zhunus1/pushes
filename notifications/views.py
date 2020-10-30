@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from users.authentication import FastAuthentication
 from rest_framework import status
 from rest_framework.decorators import api_view
+from django.db import transaction
 
 import requests
 
@@ -15,8 +16,11 @@ from rest_framework.permissions import (
 from .models import Event,Service
 from users.models import DuplicateUser
 from fcm_django.models import FCMDevice
-from .serializers import EventSerializer,DeviceSerializer
+from .serializers import EventSerializer,DeviceSerializer,EventDetailSerializer
 from users.serializers import ProfileSerializer
+from utils.permissions import IsService
+
+from urllib.parse import urljoin
 
 
 #Creates device for particular user
@@ -38,36 +42,58 @@ class DeviceViewSet(APIView):
 
 #Creates Event
 class EventViewSet(APIView):
-    #authentication_classes  = Custom authorization needed X-API-KEY?
+    permission_classes = (IsService,)
 
-    def post(self,request,format=None,**kwargs):
-        serializer = EventSerializer(data=request.data)
-        service_name = kwargs.get('service')
-        service = Service.objects.get(service=service_name)
+    def post(self,request,service,format=None):
+        data = request.data
+        service = Service.objects.get(service=service)
+        serializer = EventSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        state = serializer.validated_data['state']
-        if service.state + 1 == state:
-            service.state+=1
-            service.save()
-            serializer.save()
-        elif service.state < state:
-            #call api lacks time
-            limit = state - service.state
-            offset = service.state
-            response = requests.get(service.url,params={'limit':limit,'offset':offset},timeout=60)
+        remote_state = serializer.validated_data['state']
+        current_state = service.state + 1
+        if current_state == remote_state:
+            url = urljoin(service.url,(str(serializer.validated_data['reference_id'])+'/'))
+            response = requests.get(url,timeout=5,headers={'X-API-KEY':'85cb29a1-c630-496b-949d-8f9a1b8b7306'})
             if status.is_success(response.status_code):
                 data = response.json()
-                sz = EventSerializer(data=data, many=True)
-                sz.is_valid(raise_exception=True)
-                event_list = []
-                for event_data in sz.validated_data:
-                    event_list.append(Event(**event_data))
-                Event.objects.bulk_create(event_list)
-                return Response(sz.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(response.json(), response.status_code)
+                serializer = EventDetailSerializer(data=data)
+                if serializer.is_valid():
+                    Event.objects.create(
+                        service = service,
+                        send_at = serializer.validated_data['send_at'],
+                        reference_id = serializer.validated_data['pk'],
+                        data = serializer.validated_data['data'],
+                        is_broadcast = serializer.validated_data['is_broadcast']
+                    )
+                service.state+=1
+                service.save()
         else:
-            return Response(status=status.HTTP_201_CREATED)
+            offset = service.state
+            limit = remote_state - service.state
+            response = requests.get(service.url,params={'limit':limit,'offset':offset},timeout=60,headers={'X-API-KEY':'85cb29a1-c630-496b-949d-8f9a1b8b7306'})
+            if status.is_success(response.status_code):
+                data = response.json()
+                events = []
+                with transaction.atomic():
+                    for event in data['results']:
+                        serializer = RetrievedEventSerializer(data=event)
+                        serializer.is_valid(raise_exception=True)
+                        events.append(Event(
+                            service = service,
+                            send_at = serializer.validated_data['send_at'],
+                            reference_id = serializer.validated_data['pk'],
+                            data = serializer.validated_data['data'],
+                            is_broadcast = serializer.validated_data['is_broadcast'],
+                        ))
+                    Event.objects.bulk_create(events)
+                for event in events:
+                    post_save.send(sender=Event, instance=event, created=True)
+                service.state+=len(events)
+                service.save()
+
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+
 
 # class SendMessageViewSet(APIView):
 #     #authentication_classes  = Custom authorization needed X-API-KEY?

@@ -25,7 +25,7 @@ class EventSerializer(serializers.ModelSerializer):
     state = serializers.IntegerField()
     class Meta:
         model = Event
-        fields = ['send_at','reference_id', 'data', 'is_broadcast']
+        fields = ['send_at','reference_id', 'data', 'is_broadcast','state']
 
 class RetrievedEventSerializer(serializers.ModelSerializer):
     pk = serializers.IntegerField()

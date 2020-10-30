@@ -4,6 +4,6 @@ from . import views
 app_name = 'notifications'
 
 urlpatterns = [
-    path('event/',EventViewSet.as_view()),
+    path('event/<str:service>',EventViewSet.as_view()),
     path('device/',DeviceViewSet.as_view()),
 ]
