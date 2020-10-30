@@ -16,11 +16,12 @@ from rest_framework.permissions import (
 from .models import Event,Service
 from users.models import DuplicateUser
 from fcm_django.models import FCMDevice
-from .serializers import EventSerializer,DeviceSerializer,EventDetailSerializer
+from .serializers import EventSerializer,DeviceSerializer,EventDetailSerializer,RetrievedEventSerializer
 from users.serializers import ProfileSerializer
 from utils.permissions import IsService
 
 from urllib.parse import urljoin
+from django.db.models.signals import post_save
 
 
 #Creates device for particular user
@@ -32,12 +33,24 @@ class DeviceViewSet(APIView):
         )
 
     def post(self,request,format=None):
-        context = {'request': self.request}
-        serializer = DeviceSerializer(data=request.data,context=context)
+        user = request.user
+        serializer = DeviceSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            device,created = FCMDevice.objects.get_or_create(
+                user = user,
+                type = serializer.validated_data['type'],
+                device_id = serializer.validated_data['device_id'],
+                defaults={
+                    'registration_id' : serializer.validated_data['registration_id'],
+                    'name' : serializer.validated_data['name'],
+                },
+            )
+            device.registration_id = serializer.validated_data['registration_id']
+            device.name = serializer.validated_data['name']
+            device.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 #Creates Event
@@ -69,7 +82,7 @@ class EventViewSet(APIView):
                 service.save()
         else:
             offset = service.state
-            limit = remote_state - service.state
+            limit = remote_state - (service.state - 1)
             response = requests.get(service.url,params={'limit':limit,'offset':offset},timeout=60,headers={'X-API-KEY':'85cb29a1-c630-496b-949d-8f9a1b8b7306'})
             if status.is_success(response.status_code):
                 data = response.json()

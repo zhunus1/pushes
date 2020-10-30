@@ -5,5 +5,5 @@ app_name = 'notifications'
 
 urlpatterns = [
     path('event/<str:service>',EventViewSet.as_view()),
-    path('device/',DeviceViewSet.as_view()),
+    path('device/register',DeviceViewSet.as_view()),
 ]

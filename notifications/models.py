@@ -1,23 +1,18 @@
 from django.db import models
 from datetime import datetime
 
-class ServiceChoices(models.TextChoices):
-    CARFAX = 'carfax','Carfax'
-    ADVERTS = 'adverts','Adverts'
-    APARKING = 'aparking','Aparking'
-    GARAGE = 'garage','Garage'
-    REQUESTS = 'request','Requests'
-
 class Service(models.Model):
     service = models.CharField(
         max_length=15,
-        choices=ServiceChoices.choices,
+        unique=True,
+        verbose_name="Service",
     )
     state = models.PositiveIntegerField(default=0)
     url = models.URLField()#ssylka na service po kotoroi ya budu dostavat' eventy
     #Signal na post_save post_delete
     def __str__(self):
         return self.service
+
 
 class Event(models.Model):
     service = models.ForeignKey(Service,on_delete=models.CASCADE,related_name="events")

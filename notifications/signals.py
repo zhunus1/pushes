@@ -68,4 +68,9 @@ def start_check(sender,instance:Service,created,**kwargs):
         schedule('pushes.tasks.check_state',
                  instance.service,
                  schedule_type=Schedule.MINUTES,
-                 repeats=-1)
+                 repeats=-1,
+                 name=instance.service,)
+
+@receiver(post_delete,sender=Service)
+def delete_tasks(sender,instance:Service,**kwargs):
+    Schedule.objects.filter(name=instance.service).delete()
