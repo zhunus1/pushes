@@ -36,6 +36,3 @@ class Event(models.Model):
     class Meta:
         ordering = ('created',)
         unique_together = ('service','reference_id')
-
-    def __str__(self):
-        return str(self.reference_id)

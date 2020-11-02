@@ -39,25 +39,34 @@ def start_tasks(sender,instance:Event,**kwargs):
         serializer = EventDetailSerializer(data=event_data)
         serializer.is_valid(raise_exception=True)
 
+        q_options={
+            'group':service,
+            'task_name':'event-%s-%s' % (service, instance.pk),
+        }
+
         is_broadcast = serializer.validated_data['is_broadcast']
         if serializer.validated_data['send_at'] > timezone.now():
             if is_broadcast:
                 schedule('notifications.signals.broadcast',
-                         serializer.validated_data['data'],
-                         schedule_type=Schedule.ONCE,
-                         repeats = 1,
-                         next_run=serializer.validated_data['send_at'])
-            else:
-                schedule('notifications.signals.multicast',
-                        serializer.validated_data['listeners'],serializer.validated_data['data'],
+                        serializer.validated_data['data'],
+                        name='event-%s-%s' % (service, instance.pk),
                         schedule_type=Schedule.ONCE,
                         repeats = 1,
-                        next_run=serializer.validated_data['send_at'])
+                        next_run=serializer.validated_data['send_at'],
+                        q_options=q_options)
+            else:
+                schedule('notifications.signals.multicast',
+                        (serializer.validated_data['listeners'], serializer.validated_data['data']),
+                        name='event-%s-%s' % (service, instance.pk),
+                        schedule_type=Schedule.ONCE,
+                        repeats = 1,
+                        next_run=serializer.validated_data['send_at'],
+                        q_options=q_options)
         else:
             if is_broadcast:
-                async_task('notifications.signals.broadcast',serializer.validated_data['data'])
+                async_task('notifications.signals.broadcast',serializer.validated_data['data'], q_options=q_options)
             else:
-                async_task('notifications.signals.multicast',serializer.validated_data['listeners'],serializer.validated_data['data'])
+                async_task('notifications.signals.multicast',serializer.validated_data['listeners'],serializer.validated_data['data'], q_options=q_options)
 
 
 #Need to check state. See user manual
@@ -67,9 +76,13 @@ def start_check(sender,instance:Service,created,**kwargs):
     if created:
         schedule('pushes.tasks.check_state',
                  instance.service,
+                 name=instance.service,
                  schedule_type=Schedule.MINUTES,
                  repeats=-1,
-                 name=instance.service,)
+                 q_options={
+                     'group':instance.service,
+                     'task_name':'check-%s-%s' % (instance.service, timezone.now()),
+                 })
 
 @receiver(post_delete,sender=Service)
 def delete_tasks(sender,instance:Service,**kwargs):

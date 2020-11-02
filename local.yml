@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app
+      - nomad_notifications_media_data:/media
+      - nomad_notifications_static_data:/static
+    environment:
+      - ENV_FILE=.env
+      - TZ=Asia/Almaty
+    command: /start
+    networks:
+      - main
+
+  qcluster:
+    <<: *django
+    command: python manage.py qcluster
+    ports: []
+    depends_on:
+      - django
+
+  app:
+    <<: *django
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8080:8000"
+    depends_on:
+      - django
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=nomad
+      - POSTGRES_PASSWORD=nomad
+      - POSTGRES_DB=nomad
+      - TZ=Asia/Almaty
+    volumes:
+      - nomad_notifications_postgres_data:/var/lib/postgresql/data
+    networks:
+      - main
+
+  redis:
+    image: redis:latest
+    command: redis-server --appendonly yes
+    environment:
+      - TZ=Asia/Almaty
+    volumes:
+      - nomad_notifications_redis_data:/data
+    networks:
+      - main
+
+volumes:
+  nomad_notifications_media_data: {}
+  nomad_notifications_static_data: {}
+  nomad_notifications_postgres_data: {}
+  nomad_notifications_redis_data: {}
+
+
+networks:
+  main: {}

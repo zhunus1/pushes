@@ -43,3 +43,4 @@ class EventDetailSerializer(serializers.ModelSerializer):
 #         child=serializers.IntegerField(),
 #         )
 #     event = EventSerializer()
+#
